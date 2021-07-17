@@ -1,36 +1,51 @@
+const path = require('path');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-
-const mode = process.env.NODE_ENV || "development";
-// Temporary workaround for 'browserslist' bug that is being patched in the near future
-const target = process.env.NODE_ENV === "production" ? "browserslist" : "web";
+const RemovePlugin = require('remove-files-webpack-plugin');
 
 module.exports = {
-  // mode defaults to 'production' if not set
-  mode: mode,
-
-  // entry not required if using `src/index.js` default
-  // output not required if using `dist/main.js` default
-
-  plugins: [new MiniCssExtractPlugin()],
-
-  module: {
-    rules: [
-      {
-        test: /\.(s[ac]|c)ss$/i,
-        use: [
-          // could replace the next line with "style-loader" here for inline css
-          MiniCssExtractPlugin.loader,
-          "css-loader",
-          "postcss-loader",
-          // according to the docs, sass-loader should be at the bottom, which
-          // loads it first to avoid prefixes in your sourcemaps and other issues.
-          "sass-loader",
-        ],
-      },
+    entry: './src/main.js',
+    output: {
+      path: path.resolve(__dirname, 'dist'),
+      filename: 'scripts.js',
+    },
+    module: {
+        rules: [
+          {
+            test: /\.(s[ac]|c)ss$/i,
+            use: [
+              MiniCssExtractPlugin.loader,
+              "css-loader",
+              "postcss-loader",
+              "sass-loader",
+            ],
+          },
+          {
+            test: /\.(png|jpe?g|webp|git|svg|)$/i,
+            use: [
+              {
+                loader: 'img-optimize-loader',
+              },
+            ],
+          },
+        ]
+    },
+    plugins: [
+        new MiniCssExtractPlugin({
+        filename: "style.css"
+        }),
+        new RemovePlugin({
+            before: {
+              test: [
+                {
+                  folder: './dist',
+                  method: () => true
+                }
+              ],
+              exclude: [
+                './dist/index.html',
+              ]
+            }
+          })
     ],
-  },
-
-  // defaults to "web", so only required for webpack-dev-server bug
-  target: target,
-  devtool: "source-map",
+    devtool: "source-map",
 };
